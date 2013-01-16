@@ -2,3 +2,10 @@ body{
     color:white;
     background: black;
 }
+#controls{
+    margin:20px 0;
+}
+audio{
+    clear:both;
+    margin:20px 0;
+}

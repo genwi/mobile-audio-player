@@ -62,11 +62,11 @@ GW.AudioPlayer = function(playlist) {
                 self.play($(this).index());
             });
 
-        $(settings.btnNext).click(function() {
+        $(settings.btnNext).on(settings.playEvent, function() {
            self.next() ;
         });
 
-        $(settings.btnPrev).click(function() {
+        $(settings.btnPrev).on(settings.playEvent, function() {
            self.prev() ;
         });
     };
