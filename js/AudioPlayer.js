@@ -2,12 +2,15 @@
 GW.AudioPlayer = function(playlist) {
     var currentSong = 0;
     var prevSong = undefined;
-
+    var player = undefined;
     var settings = {
         player:             '#audio_player',
+        btnPlayPause:       '#btn_play_pause',
         btnPrev:            '#btn_prev',
         btnNext:            '#btn_next',
         playlistBrowser:    '#playlist',
+        progress:           '#progress',
+        seek:               '#seek',
         playlistElement:    'p',
         albumArt:           '#album_art',
         playEvent:          'touchstart mousedown'
@@ -17,23 +20,29 @@ GW.AudioPlayer = function(playlist) {
 
     this.init = function(options) {
         $.extend(settings, options);
+        player = $(settings.player).get(0);
         var playlistHtml = '';
         for (i = 0, j=playlist.length; i < j; i++) {
             playlistHtml += '<' + settings.playlistElement + '>' + playlist[i].title + '</' + settings.playlistElement + '>';
         }
         $(settings.playlistBrowser).html(playlistHtml)
-
         bindEvents();
+        loadTrack(0);
     };
 
     this.play = function(track) {
-        var player = $(settings.player).get(0);
-        player.src = playlist[track].file;
-        $(settings.albumArt).attr('src', playlist[track].art);
-        player.play();
+        if(track === undefined) track = 0;
+        loadTrack(track);
 
-        prevSong = currentSong;
-        currentSong = track;
+        // make sure file is loaded enough to play
+        player.addEventListener('canplay', function() {
+            player.play();
+            onAfterPlay();
+            $(settings.seek).attr('max',player.duration);
+            prevSong = currentSong;
+            currentSong = track;    
+        });
+        
     };
 
     this.next = function() {
@@ -56,19 +65,57 @@ GW.AudioPlayer = function(playlist) {
 
     var self = this;
 
+    function loadTrack(track) {
+        player.src = playlist[track].file;
+        $(settings.albumArt).attr('src', playlist[track].art);
+    };
+
+    function onAfterPlay() {
+        $(settings.btnPlayPause + ' span').toggleClass('icon-play icon-pause');
+    };
+
     function bindEvents() {        
         $(settings.playlistBrowser)
             .on(settings.playEvent,  settings.playlistElement, function() {
                 self.play($(this).index());
             });
 
+        $(settings.btnPlayPause).on(settings.playEvent, function() {
+            if(player.paused) {
+                player.play();
+            } else {
+                player.pause();
+            }
+            onAfterPlay();
+        });
+
         $(settings.btnNext).on(settings.playEvent, function() {
-           self.next() ;
+           self.next();
         });
 
         $(settings.btnPrev).on(settings.playEvent, function() {
-           self.prev() ;
+           self.prev();
         });
+
+        $(settings.seek).on('change', function() {
+            player.currentTime = $(this).val();
+            $(this).attr("max", player.duration);
+        });
+
+        player.addEventListener('timeupdate', function(e) {
+            $(settings.progress).text(friendlyTimeFormat(player.currentTime));
+            $(settings.seek).attr('value', parseInt(player.currentTime, 10));
+        });
+    };
+
+    function friendlyTimeFormat(uglyTime) {
+        var time = Math.floor(uglyTime);
+        var minutes = Math.floor(time / 60);
+        var seconds = time - minutes * 60;
+        if((seconds + '').length < 2) {
+            seconds = '0' + seconds;
+        }
+        return minutes + ':' + seconds;
     };
 
 };

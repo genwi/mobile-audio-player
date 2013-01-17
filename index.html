@@ -42,13 +42,16 @@
     		<img alt="albumart" id="album_art" src="img/albumart/Logo.png" />
     	</div>
         <div id="controls">
-            <input id="btn_prev" type="image" height="45px"; width="45px"; src="img/icons/prev.png">
-            <input id="btn_next" type="image" height="45px";width="45px"; src="img/icons/next.png">
+            <div id="btn_play_pause"><span aria-hidden="true" class="icon-play"></span></div>
+            <div id="btn_prev"><span aria-hidden="true" class="icon-backward"></span></div>
+            <div id="btn_next"><span aria-hidden="true" class="icon-forward"></span></div>
+            <div id="progress"></div>
+            <input type="range" id="seek" value="0" max="">
         </div>
         <div id="player">
-            <audio id="audio_player" controls="controls" src=""></audio>
+            <audio id="audio_player" src=""></audio>
     	</div>
-        <div id="playlist">
+        <div id="playlist"></div>
     </div>
 </body>
 </html>
