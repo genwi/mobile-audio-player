@@ -96,3 +96,10 @@ you can use the generic selector below, but it's slower:
 .icon-forward:before {
     content: "\65";
 }
+
+
+#playlist p{
+    padding:3px;
+    border-bottom: 1px solid white;
+    margin-bottom:6px;
+}

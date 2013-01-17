@@ -13,7 +13,7 @@ GW.AudioPlayer = function(playlist) {
         seek:               '#seek',
         playlistElement:    'p',
         albumArt:           '#album_art',
-        playEvent:          'touchstart mousedown'
+        playEvent:          'click'
     };
 
     // Public Methods
@@ -35,12 +35,16 @@ GW.AudioPlayer = function(playlist) {
         loadTrack(track);
 
         // make sure file is loaded enough to play
+        console.log(player);
+        player.play();
         player.addEventListener('canplay', function() {
+            console.log('canplay');
             player.play();
             onAfterPlay();
             $(settings.seek).attr('max',player.duration);
             prevSong = currentSong;
-            currentSong = track;    
+            currentSong = track;
+            player.removeEventListener('canplay');
         });
         
     };
@@ -66,6 +70,7 @@ GW.AudioPlayer = function(playlist) {
     var self = this;
 
     function loadTrack(track) {
+        //console.log('loading', track);
         player.src = playlist[track].file;
         $(settings.albumArt).attr('src', playlist[track].art);
     };
@@ -77,6 +82,7 @@ GW.AudioPlayer = function(playlist) {
     function bindEvents() {        
         $(settings.playlistBrowser)
             .on(settings.playEvent,  settings.playlistElement, function() {
+                console.log('playing', $(this).index());
                 self.play($(this).index());
             });
 
