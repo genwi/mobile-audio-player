@@ -1,5 +1,5 @@
-﻿var GW = GW || {};
-GW.AudioPlayer = function(playlist) {
+﻿//var GW = GW || {};
+AudioPlayer = function(playlist) {
     var currentSong = 0;
     var prevSong = undefined;
     var player = undefined;
@@ -33,20 +33,17 @@ GW.AudioPlayer = function(playlist) {
     this.play = function(track) {
         if(track === undefined) track = 0;
         loadTrack(track);
-
         // make sure file is loaded enough to play
-        console.log(player);
-        player.play();
-        player.addEventListener('canplay', function() {
-            console.log('canplay');
-            player.play();
-            onAfterPlay();
-            $(settings.seek).attr('max',player.duration);
-            prevSong = currentSong;
-            currentSong = track;
-            player.removeEventListener('canplay');
-        });
-        
+        console.log(player.readyState);
+
+        console.log('payl');
+        if(player.readyState != 4) {
+            console.log('add listener');
+            player.addEventListener('canplay', onTrackReady);
+        } else {
+            onTrackReady();
+        }
+        currentSong = track;
     };
 
     this.next = function() {
@@ -69,14 +66,31 @@ GW.AudioPlayer = function(playlist) {
 
     var self = this;
 
+    function onTrackReady() {
+        console.log('canplay');
+        player.play();
+        showPause();
+        console.log('call after play');
+        console.log('duration', player.duration);
+        $(settings.seek).attr('max',player.duration);
+        prevSong = currentSong;
+        player.removeEventListener('canplay');
+    }
+
     function loadTrack(track) {
-        //console.log('loading', track);
+        $('#now_playing .song_title').text(playlist[track].title);
         player.src = playlist[track].file;
+        player.load();
+        console.log(player);
         $(settings.albumArt).attr('src', playlist[track].art);
     };
 
-    function onAfterPlay() {
-        $(settings.btnPlayPause + ' span').toggleClass('icon-play icon-pause');
+    function showPlay() {
+        $(settings.btnPlayPause + ' span').removeClass('icon-pause').addClass('icon-play');
+    }
+    function showPause() {
+        console.log('do toggle!');
+        $(settings.btnPlayPause + ' span').removeClass('icon-play').addClass('icon-pause');
     };
 
     function bindEvents() {        
@@ -88,19 +102,26 @@ GW.AudioPlayer = function(playlist) {
 
         $(settings.btnPlayPause).on(settings.playEvent, function() {
             if(player.paused) {
-                player.play();
+                if(player.currentTime > 0) {
+                    player.play();    
+                } else {
+                    self.play(self.currentSong);        
+                }
             } else {
                 player.pause();
             }
-            onAfterPlay();
+            // toggle play/pause
+            $(settings.btnPlayPause + ' span').toggleClass('icon-play icon-pause');
         });
 
         $(settings.btnNext).on(settings.playEvent, function() {
-           self.next();
+            showPlay();
+            self.next();
         });
 
         $(settings.btnPrev).on(settings.playEvent, function() {
-           self.prev();
+            showPlay();
+            self.prev();
         });
 
         $(settings.seek).on('change', function() {
