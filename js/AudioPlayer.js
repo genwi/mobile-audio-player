@@ -1,9 +1,9 @@
 ﻿//var GW = GW || {};
 AudioPlayer = function(playlist) {
-    var currentSong = 0;
-    var prevSong = undefined;
-    var player = undefined;
-    var settings = {
+    var _currentSong = 0;
+    var _player = undefined;
+    var _settings = {
+        /* DOM settings */
         player:             '#audio_player',
         btnPlayPause:       '#btn_play_pause',
         btnPrev:            '#btn_prev',
@@ -13,19 +13,25 @@ AudioPlayer = function(playlist) {
         seek:               '#seek',
         playlistElement:    'p',
         albumArt:           '#album_art',
-        playEvent:          'click'
+
+        /* event triggers */
+        playEvent:          'click',
+
+        /* callbacks */
+        onLoadTrack: undefined,
+        onTrackStart: undefined
     };
 
     // Public Methods
 
     this.init = function(options) {
-        $.extend(settings, options);
-        player = $(settings.player).get(0);
+        $.extend(_settings, options);
+        _player = $(_settings.player).get(0);
         var playlistHtml = '';
         for (i = 0, j=playlist.length; i < j; i++) {
-            playlistHtml += '<' + settings.playlistElement + '>' + playlist[i].title + '</' + settings.playlistElement + '>';
+            playlistHtml += '<' + _settings.playlistElement + '>' + playlist[i].title + '</' + _settings.playlistElement + '>';
         }
-        $(settings.playlistBrowser).html(playlistHtml)
+        $(_settings.playlistBrowser).html(playlistHtml)
         bindEvents();
         loadTrack(0);
     };
@@ -34,104 +40,106 @@ AudioPlayer = function(playlist) {
         if(track === undefined) track = 0;
         loadTrack(track);
         // make sure file is loaded enough to play
-        console.log(player.readyState);
 
-        console.log('payl');
-        if(player.readyState != 4) {
-            console.log('add listener');
-            player.addEventListener('canplay', onTrackReady);
+        if(_player.readyState != 4) {
+            _player.addEventListener('canplay', onTrackReady);
         } else {
             onTrackReady();
         }
-        currentSong = track;
+        _currentSong = track;
     };
 
     this.next = function() {
-        if( currentSong < ( playlist.length - 1 ) ) {
-            this.play(currentSong + 1);
+        if( _currentSong < ( playlist.length - 1 ) ) {
+            this.play(_currentSong + 1);
         } else {
             this.play(0);
         }
     };
 
     this.prev = function() {
-        if( currentSong > 0) {
-            this.play(currentSong -1);
+        if( _currentSong > 0) {
+            this.play(_currentSong -1);
         } else {
             this.play(playlist.length-1);
         }
     };
 
+    this.nowPlaying = function() {
+        return playlist[_currentSong];
+    }
     // Private Methods
 
     var self = this;
 
     function onTrackReady() {
-        console.log('canplay');
-        player.play();
+        if(_settings.onTrackStart) {
+            _settings.onTrackStart(playlist[_currentSong]);
+        }
+        _player.play();
         showPause();
-        console.log('call after play');
-        console.log('duration', player.duration);
-        $(settings.seek).attr('max',player.duration);
-        prevSong = currentSong;
-        player.removeEventListener('canplay');
+        $(_settings.seek).attr('max',_player.duration);
+        _player.removeEventListener('canplay');
     }
 
     function loadTrack(track) {
+        if(_settings.onLoadTrack) {
+            _settings.onLoadTrack(playlist[track]);
+        }
         $('#now_playing .song_title').text(playlist[track].title);
-        player.src = playlist[track].file;
-        player.load();
-        console.log(player);
-        $(settings.albumArt).attr('src', playlist[track].art);
+        _player.src = playlist[track].file;
+        _player.load();
+        $(_settings.albumArt).attr('src', playlist[track].art);
     };
 
     function showPlay() {
-        $(settings.btnPlayPause + ' span').removeClass('icon-pause').addClass('icon-play');
+        $(_settings.btnPlayPause + ' span').removeClass('icon-pause').addClass('icon-play');
     }
     function showPause() {
-        console.log('do toggle!');
-        $(settings.btnPlayPause + ' span').removeClass('icon-play').addClass('icon-pause');
+        $(_settings.btnPlayPause + ' span').removeClass('icon-play').addClass('icon-pause');
     };
 
     function bindEvents() {        
-        $(settings.playlistBrowser)
-            .on(settings.playEvent,  settings.playlistElement, function() {
-                console.log('playing', $(this).index());
+        $(_settings.playlistBrowser)
+            .on(_settings.playEvent,  _settings.playlistElement, function() {
                 self.play($(this).index());
             });
 
-        $(settings.btnPlayPause).on(settings.playEvent, function() {
-            if(player.paused) {
-                if(player.currentTime > 0) {
-                    player.play();    
+        $(_settings.btnPlayPause).on(_settings.playEvent, function() {
+            if(_player.paused) {
+                if(_player.currentTime > 0) {
+                    _player.play();    
                 } else {
-                    self.play(self.currentSong);        
+                    self.play(self._currentSong);        
                 }
             } else {
-                player.pause();
+                _player.pause();
             }
             // toggle play/pause
-            $(settings.btnPlayPause + ' span').toggleClass('icon-play icon-pause');
+            $(_settings.btnPlayPause + ' span').toggleClass('icon-play icon-pause');
         });
 
-        $(settings.btnNext).on(settings.playEvent, function() {
+        $(_settings.btnNext).on(_settings.playEvent, function() {
             showPlay();
             self.next();
         });
 
-        $(settings.btnPrev).on(settings.playEvent, function() {
+        $(_settings.btnPrev).on(_settings.playEvent, function() {
             showPlay();
             self.prev();
         });
 
-        $(settings.seek).on('change', function() {
-            player.currentTime = $(this).val();
-            $(this).attr("max", player.duration);
+        $(_settings.seek).on('change', function() {
+            _player.currentTime = $(this).val();
+            $(this).attr("max", _player.duration);
         });
 
-        player.addEventListener('timeupdate', function(e) {
-            $(settings.progress).text(friendlyTimeFormat(player.currentTime));
-            $(settings.seek).attr('value', parseInt(player.currentTime, 10));
+        _player.addEventListener('timeupdate', function(e) {
+            $(_settings.progress).text(friendlyTimeFormat(_player.currentTime));
+            $(_settings.seek).attr('value', parseInt(_player.currentTime, 10));
+        });
+        _player.addEventListener('ended', function() {
+           self.next(); 
         });
     };
 
