@@ -18,6 +18,7 @@ AudioPlayer = function(playlist) {
         playEvent:          'click',
 
         /* callbacks */
+        onPlayerInit: undefined,
         onLoadTrack: undefined,
         onTrackStart: undefined
     };
@@ -34,6 +35,9 @@ AudioPlayer = function(playlist) {
         $(_settings.playlistBrowser).html(playlistHtml)
         bindEvents();
         loadTrack(0);
+        if(_settings.onPlayerInit) {
+            _settings.onPlayerInit();
+        }
     };
 
     this.play = function(track) {
