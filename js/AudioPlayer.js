@@ -84,6 +84,10 @@ AudioPlayer = function(playlist) {
         showPause();
         $(_settings.seek).attr('max',_player.duration);
         _player.removeEventListener('canplay');
+        $(_settings.playlistElement, _settings.playlistBrowser)
+            .removeClass('active')
+            .eq(_currentSong)
+            .addClass('active');
     }
 
     function loadTrack(track) {
